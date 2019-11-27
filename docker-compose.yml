@@ -38,6 +38,24 @@ services:
     ports:
       - "8081:8081"
 
+  # Control Center for managing Kafka and Schema Registry.
+  # This is an enterprise image and has a commercial license, so use only for non-commercial purposes.
+  # As a free option, please consider Schema Registry UI: https://github.com/lensesio/schema-registry-ui
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:5.3.1
+    container_name: control-center
+    depends_on:
+      - zookeeper
+      - kafka
+      - schema-registry
+    ports:
+      - 9021:9021
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:29092'
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+
   # Spark master container
   spark-master:
     image: bde2020/spark-master:2.4.4-hadoop2.7
