@@ -24,6 +24,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  # Schema-registry for Avro
   schema-registry:
     image: confluentinc/cp-schema-registry:5.3.1
     container_name: schema-registry
@@ -37,7 +38,6 @@ services:
     ports:
       - "8081:8081"
 
-
   # Spark master container
   spark-master:
     image: bde2020/spark-master:2.4.4-hadoop2.7
@@ -48,7 +48,7 @@ services:
     environment:
       - INIT_DAEMON_STEP=setup_spark
 
-  # Spark worker. Scale up with: docker-compose scale spark-worker=3
+  # Spark worker. Scale up with: docker-compose scale spark-worker=3 (or more)
   spark-worker:
     image: bde2020/spark-worker:2.4.4-hadoop2.7
     depends_on:
