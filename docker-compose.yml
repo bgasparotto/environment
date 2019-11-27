@@ -3,20 +3,58 @@ services:
 
   # Zookeeper and Kafka
   zookeeper:
-    image: wurstmeister/zookeeper:latest
-    ports:
-      - "2181:2181"
+    image: confluentinc/cp-zookeeper:5.3.1
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
 
   kafka:
-    image: wurstmeister/kafka:2.12-2.3.0
+    image: confluentinc/cp-kafka:5.3.1
+    container_name: kafka
+    depends_on:
+      - zookeeper
     ports:
-      - "9092:9092"
+      - 9092:9092
     environment:
-      KAFKA_ADVERTISED_HOST_NAME: localhost
+      KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  # Schema-registry for Avro
+  schema-registry:
+    image: confluentinc/cp-schema-registry:5.3.1
+    container_name: schema-registry
+    depends_on:
+      - zookeeper
+      - kafka
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    ports:
+      - "8081:8081"
+
+  # Control Center for managing Kafka and Schema Registry.
+  # This is an enterprise image and has a commercial license, so use only for non-commercial purposes.
+  # As a free option, please consider Schema Registry UI: https://github.com/lensesio/schema-registry-ui
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:5.3.1
+    container_name: control-center
+    depends_on:
+      - zookeeper
+      - kafka
+      - schema-registry
+    ports:
+      - 9021:9021
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:29092'
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
 
   # Spark master container
   spark-master:
@@ -28,7 +66,7 @@ services:
     environment:
       - INIT_DAEMON_STEP=setup_spark
 
-  # Spark worker. Scale up with: docker-compose scale spark-worker=3
+  # Spark worker. Scale up with: docker-compose scale spark-worker=3 (or more)
   spark-worker:
     image: bde2020/spark-worker:2.4.4-hadoop2.7
     depends_on:
