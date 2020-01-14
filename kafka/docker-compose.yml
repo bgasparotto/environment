@@ -55,23 +55,3 @@ services:
       CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       CONTROL_CENTER_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
       CONTROL_CENTER_REPLICATION_FACTOR: 1
-
-  # Spark master container
-  spark-master:
-    image: bde2020/spark-master:2.4.4-hadoop2.7
-    container_name: spark-master
-    ports:
-      - "8080:8080"
-      - "7077:7077"
-    environment:
-      - INIT_DAEMON_STEP=setup_spark
-
-  # Spark worker. Scale up with: docker-compose scale spark-worker=3 (or more)
-  spark-worker:
-    image: bde2020/spark-worker:2.4.4-hadoop2.7
-    depends_on:
-      - spark-master
-    ports:
-      - "8081"
-    environment:
-      - "SPARK_MASTER=spark://spark-master:7077"
