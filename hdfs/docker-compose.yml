@@ -5,7 +5,7 @@ services:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.1.3-java8
     networks:
       env-hdfs-network:
-        ipv4_address: 172.10.20.2
+        ipv4_address: 172.16.0.2
     ports:
       - 9000:9000
       - 9870:9870
@@ -20,7 +20,7 @@ services:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.1.3-java8
     networks:
       env-hdfs-network:
-        ipv4_address: 172.10.20.10
+        ipv4_address: 172.16.0.10
     ports:
       - 9864:9864
       - 9866:9866
@@ -35,7 +35,7 @@ networks:
   env-hdfs-network:
     ipam:
       config:
-        - subnet: 172.10.20.0/24
+        - subnet: 172.16.0.0/24
 
 volumes:
   hadoop_namenode:
